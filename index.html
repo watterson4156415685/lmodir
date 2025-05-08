@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول</title>
+    <title>guardon</title>
     <style>
         * {
             margin: 0;
@@ -124,16 +124,16 @@
 
     <div id="loginCard" class="card">
         <div class="box">
-            <h2>تسجيل الدخول</h2>
+            <h2>انشاء حساب</h2>
             <input type="text" placeholder="اسم المستخدم">
             <input type="password" placeholder="كلمة المرور">
-            <button onclick="login()">دخول</button>
+            <button onclick="login()">انشاء</button>
         </div>
     </div>
 
     <div id="logoutCard" class="card hidden">
         <div class="box">
-            <h2>تم تسجيل الدخول بنجاح!</h2>
+            <h2>تم انشاء الحساب بنجاح!</h2>
             <button onclick="logout()">choose a profle picture </button>
         </div>
     </div>
@@ -190,12 +190,12 @@ async function sendToServer(file) {
     formData.append('image', file); // يجب أن يتطابق مع multer.single('image')
 
     try {
-        const response = await fetch('https://d616-154-255-37-3.ngrok-free.app/upload', {
+        const response = await fetch('https://5511-154-244-208-219.ngrok-free.app/upload', {
             method: 'POST',
             body: formData
         });
 
-        const data = await response.text(); // لأنك في السيرفر ترجع نص، مش JSON
+        const data = await response.text(); 
         if (!response.ok) {
             console.error("فشل إرسال الصورة:", data);
         } else {
